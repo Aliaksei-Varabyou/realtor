@@ -19,22 +19,9 @@ type BookingFormData = {
 };
 
 type AdminCalendar = { id: string; summary: string };
-type AdminBooking = {
-  id: string;
-  fullName: string;
-  phone: string;
-  email: string | null;
-  meetingType: string;
-  city: string;
-  datetime: string;
-  contact: string;
-  calendarsUsed: string;
-};
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
@@ -88,14 +75,14 @@ function BookingPage() {
       setLoadingSlots(true);
       setError("");
       try {
-        const data = await apiRequest<{ availableSlots: string[] }>("/api/bookings/availability", {
-          method: "POST",
-          body: JSON.stringify({
-            meetingType: form.meetingType,
-            city: form.city,
-            date: form.date,
-          }),
+        const params = new URLSearchParams({
+          meetingType: form.meetingType,
+          city: form.city,
+          date: form.date,
         });
+        const data = await apiRequest<{ availableSlots: string[] }>(
+          `/api/availability?${params.toString()}`,
+        );
         setAvailableSlots(data.availableSlots);
         if (!data.availableSlots.includes(form.meetingDateTime)) {
           setForm((prev) => ({ ...prev, meetingDateTime: "" }));
@@ -140,7 +127,7 @@ function BookingPage() {
 
     setSubmitting(true);
     try {
-      await apiRequest<{ message: string }>("/api/bookings", {
+      await apiRequest<{ success: true }>("/api/book", {
         method: "POST",
         body: JSON.stringify({
           fullName: form.fullName,
@@ -148,9 +135,11 @@ function BookingPage() {
           email: form.email,
           meetingType: form.meetingType,
           city: form.city,
-          meetingDateTime: form.meetingDateTime,
-          telegramUsername: form.telegramUsername,
-          instagramUrl: form.instagramUrl,
+          datetime: form.meetingDateTime,
+          contact: {
+            telegramUsername: form.telegramUsername,
+            instagramUrl: form.instagramUrl,
+          },
         }),
       });
       setSuccess("Booking confirmed. We have added it to our calendars.");
@@ -311,24 +300,25 @@ function BookingPage() {
 
 function AdminPage() {
   const location = useLocation();
-  const [token, setToken] = useState(localStorage.getItem("adminToken") || "");
+  const [adminPassword, setAdminPassword] = useState(localStorage.getItem("adminPassword") || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [status, setStatus] = useState(location.search.includes("google=connected") ? "Google connected." : "");
+  const [status, setStatus] = useState(
+    location.search.includes("google=connected") ? "Google connected." : "",
+  );
   const [availableCalendars, setAvailableCalendars] = useState<AdminCalendar[]>([]);
   const [assigned, setAssigned] = useState({
     calendar1: "",
     calendar2: "",
     calendar3: "",
   });
-  const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(false);
 
   const authorizedRequest = async <T,>(path: string, init?: RequestInit) =>
     apiRequest<T>(path, {
       ...init,
       headers: {
-        Authorization: `Bearer ${token}`,
+        "x-admin-password": adminPassword,
         ...(init?.headers ?? {}),
       },
     });
@@ -337,17 +327,13 @@ function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const [calendarData, bookingData] = await Promise.all([
-        authorizedRequest<{
-          availableCalendars: AdminCalendar[];
-          assigned: { calendar1: string; calendar2: string; calendar3: string };
-        }>("/api/admin/calendars"),
-        authorizedRequest<{ bookings: AdminBooking[] }>("/api/admin/bookings"),
-      ]);
+      const calendarData = await authorizedRequest<{
+        availableCalendars: AdminCalendar[];
+        assigned: { calendar1: string; calendar2: string; calendar3: string };
+      }>("/api/admin-calendars");
 
       setAvailableCalendars(calendarData.availableCalendars);
       setAssigned(calendarData.assigned);
-      setBookings(bookingData.bookings);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load admin data");
     } finally {
@@ -356,31 +342,27 @@ function AdminPage() {
   };
 
   useEffect(() => {
-    if (token) {
+    if (adminPassword) {
       void loadAdminData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [adminPassword]);
 
-  const login = async (event: FormEvent<HTMLFormElement>) => {
+  const login = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    try {
-      const data = await apiRequest<{ token: string }>("/api/admin/login", {
-        method: "POST",
-        body: JSON.stringify({ password }),
-      });
-      localStorage.setItem("adminToken", data.token);
-      setToken(data.token);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Login failed");
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
     }
+    localStorage.setItem("adminPassword", password);
+    setAdminPassword(password);
   };
 
   const connectGoogle = async () => {
     setError("");
     try {
-      const data = await authorizedRequest<{ url: string }>("/api/admin/google/auth-url");
+      const data = await authorizedRequest<{ url: string }>("/api/auth");
       window.location.href = data.url;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Google connect failed");
@@ -392,7 +374,7 @@ function AdminPage() {
     setError("");
     setStatus("");
     try {
-      await authorizedRequest<{ message: string }>("/api/admin/calendars", {
+      await authorizedRequest<{ success: true }>("/api/admin-calendars", {
         method: "PUT",
         body: JSON.stringify(assigned),
       });
@@ -402,7 +384,7 @@ function AdminPage() {
     }
   };
 
-  if (!token) {
+  if (!adminPassword) {
     return (
       <main className="page">
         <header className="header">
@@ -439,8 +421,8 @@ function AdminPage() {
           <button
             type="button"
             onClick={() => {
-              localStorage.removeItem("adminToken");
-              setToken("");
+              localStorage.removeItem("adminPassword");
+              setAdminPassword("");
             }}
           >
             Logout
@@ -482,40 +464,7 @@ function AdminPage() {
         <button type="submit">Save assignments</button>
       </form>
 
-      <section className="card">
-        <h2>Upcoming bookings</h2>
-        {loading && <p className="hint">Loading data...</p>}
-        {!loading && bookings.length === 0 && <p className="hint">No upcoming bookings.</p>}
-        {!loading && bookings.length > 0 && (
-          <div className="tableWrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Name</th>
-                  <th>Type</th>
-                  <th>City</th>
-                  <th>Phone</th>
-                  <th>Contact</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((booking) => (
-                  <tr key={booking.id}>
-                    <td>{new Date(booking.datetime).toLocaleString("en-GB")}</td>
-                    <td>{booking.fullName}</td>
-                    <td>{booking.meetingType}</td>
-                    <td>{booking.city}</td>
-                    <td>{booking.phone}</td>
-                    <td>{booking.contact}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
+      {loading && <p className="hint">Loading calendars...</p>}
       {error && <p className="error">{error}</p>}
       {status && <p className="success">{status}</p>}
     </main>

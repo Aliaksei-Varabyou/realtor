@@ -1,101 +1,85 @@
-# Realtor Booking MVP
+# Realtor Booking MVP (Vercel Serverless)
 
-Simple full-stack MVP for a real estate agency booking flow.
+Vite React app with Vercel serverless API routes for booking and Google Calendar integration.
 
 - Frontend: React + TypeScript (Vite)
-- Backend: Node.js + Express (TypeScript)
-- DB: SQLite via Prisma
-- Calendar: Google Calendar API (FreeBusy + event creation)
-- Admin auth: password-based login (JWT token)
+- Backend: Vercel API routes (`/api/*`)
+- Google API: `googleapis` OAuth2 + Calendar FreeBusy/events
+- Storage: Vercel KV (preferred) with env/in-memory fallback
 
 ## Project structure
 
-- `src/` - frontend app (public booking form + admin panel)
-- `backend/` - Express API + Prisma schema + Google integration
+- `src/` - frontend booking + admin UI
+- `api/` - serverless API handlers
+  - `availability.ts`
+  - `book.ts`
+  - `auth.ts`
+  - `auth/callback.ts`
+  - `admin-calendars.ts`
+- `lib/` - shared serverless logic
+  - `google.ts`
+  - `availability.ts`
+  - `calendarRules.ts`
 
-## Environment setup
+## Environment
 
-### Frontend env
+Copy `.env.example` to `.env` and fill:
 
-1. Copy `.env.example` to `.env`
-2. Set API URL if needed:
+- `ADMIN_PASSWORD`
+- `APP_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
 
-```bash
-VITE_API_URL="http://localhost:4000"
-```
+Optional:
 
-### Backend env
+- `KV_REST_API_URL`
+- `KV_REST_API_TOKEN`
+- `GOOGLE_REFRESH_TOKEN` (fallback only)
+- `GOOGLE_CALENDARS_JSON` (fallback only)
 
-1. Copy `backend/.env.example` to `backend/.env`
-2. Fill values:
-   - `ADMIN_PASSWORD`
-   - `ADMIN_JWT_SECRET`
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `GOOGLE_REDIRECT_URI` (must match Google OAuth app settings)
+## Local development
 
-## Run locally
-
-Install dependencies:
+Install:
 
 ```bash
 npm install
-cd backend && npm install
 ```
 
-Initialize Prisma/SQLite:
+Run Vercel API locally:
 
 ```bash
-cd backend
-npx prisma generate
-npx prisma db push
+npm run dev:vercel
 ```
 
-Start backend:
-
-```bash
-cd backend
-npm run dev
-```
-
-Start frontend (in another terminal):
+Run frontend in another terminal:
 
 ```bash
 npm run dev
 ```
 
-Frontend: [http://localhost:5173](http://localhost:5173)  
-Backend: [http://localhost:4000](http://localhost:4000)
+- Frontend: `http://localhost:5173`
+- API (via Vercel dev): `http://localhost:3000/api/*`
 
-## Main flows
+Vite proxies `/api` requests to port `3000`.
 
-### Public booking form
+## API endpoints
 
-- Requires `meetingType` + `city` before time selection
-- Loads available 30-minute slots from backend
-- Requires at least one contact after slot selection:
-  - Telegram username OR Instagram URL
-- Re-checks slot before booking creation
-- Creates event in all selected calendars and stores booking in DB
+- `GET /api/availability?meetingType&city&date`
+- `POST /api/book`
+- `GET /api/auth` (admin password in `x-admin-password`)
+- `GET /api/auth/callback`
+- `GET /api/admin-calendars` (admin password in `x-admin-password`)
+- `PUT /api/admin-calendars` (admin password in `x-admin-password`)
 
-### Calendar selection rules
+## Deployment to Vercel
 
-- consultation OR city=other -> `calendar1`
-- mortgage + wroclaw -> `calendar1` + `calendar2`
-- mortgage + warsaw -> `calendar1` + `calendar3`
-
-### Availability rules
-
-- FreeBusy data from selected calendars
-- Merged busy intervals
-- 30 min slots
-- Working hours 09:00-18:00 (Europe/Warsaw)
-- Excludes past times
-- Applies 15-minute buffer around meetings
-
-### Admin panel
-
-- Login with password (`/admin`)
-- Connect Google account (OAuth2)
-- Assign `calendar1`, `calendar2`, `calendar3`
-- View upcoming bookings from SQLite
+1. Push repository to GitHub/GitLab/Bitbucket.
+2. Import project in Vercel.
+3. Set build command: `npm run build`.
+4. Set output directory: `dist`.
+5. Add all env vars from `.env.example` in Vercel project settings.
+6. If using KV, connect a Vercel KV database and expose its env vars.
+7. Update Google OAuth redirect URI to:
+   - `https://YOUR_DOMAIN/api/auth/callback`
+8. Deploy.
