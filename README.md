@@ -20,6 +20,7 @@ Vite React app with Vercel serverless API routes for booking and Google Calendar
   - `google.ts`
   - `availability.ts`
   - `calendarRules.ts`
+  - `storage.ts`
 
 ## Environment
 
@@ -35,8 +36,7 @@ Optional:
 
 - `KV_REST_API_URL`
 - `KV_REST_API_TOKEN`
-- `GOOGLE_REFRESH_TOKEN` (fallback only)
-- `GOOGLE_CALENDARS_JSON` (fallback only)
+- `GOOGLE_CONNECTIONS_JSON` (fallback only)
 
 ## Local development
 
@@ -67,10 +67,17 @@ Vite proxies `/api` requests to port `3000`.
 
 - `GET /api/availability?meetingType&city&date`
 - `POST /api/book`
-- `GET /api/auth` (admin password in `x-admin-password`)
+- `GET /api/auth?role=calendar1|calendar2|calendar3` (admin password in `x-admin-password` or `adminPassword` query for browser redirect)
 - `GET /api/auth/callback`
 - `GET /api/admin-calendars` (admin password in `x-admin-password`)
-- `PUT /api/admin-calendars` (admin password in `x-admin-password`)
+
+## Multi-account Google setup
+
+- Admin page shows status for `calendar1`, `calendar2`, `calendar3`
+- Each role is connected through its own OAuth flow
+- Callback stores `role + email + refreshToken + primary calendarId`
+- Availability and booking use connected roles based on business rules
+- If Google returns `401`, role is marked disconnected automatically
 
 ## Deployment to Vercel
 

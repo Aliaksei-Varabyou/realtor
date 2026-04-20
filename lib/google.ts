@@ -1,67 +1,25 @@
-import { kv } from "@vercel/kv";
 import { google } from "googleapis";
+import { z } from "zod";
 import type { CalendarSlot } from "./calendarRules.js";
+import { clearConnection, getAllConnections, saveConnection } from "./storage.js";
 
-const STORE_KEY = "realtor:mvp:config";
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
+const roleSchema = z.enum(["calendar1", "calendar2", "calendar3"]);
 
-type StoredConfig = {
-  refreshToken: string | null;
-  calendars: Record<CalendarSlot, string>;
-};
-
-declare global {
-  // Keep local-dev fallback simple when KV is not configured.
-  // eslint-disable-next-line no-var
-  var __REALTOR_MVP_STORE__: StoredConfig | undefined;
-}
-
-function parseCalendarEnv() {
-  try {
-    const raw = process.env.GOOGLE_CALENDARS_JSON;
-    if (!raw) {
-      return { calendar1: "", calendar2: "", calendar3: "" };
-    }
-    const parsed = JSON.parse(raw) as Partial<Record<CalendarSlot, string>>;
-    return {
-      calendar1: parsed.calendar1 ?? "",
-      calendar2: parsed.calendar2 ?? "",
-      calendar3: parsed.calendar3 ?? "",
-    };
-  } catch {
-    return { calendar1: "", calendar2: "", calendar3: "" };
+function createOAuthBaseClient() {
+  if (
+    !process.env.GOOGLE_CLIENT_ID ||
+    !process.env.GOOGLE_CLIENT_SECRET ||
+    !process.env.GOOGLE_REDIRECT_URI
+  ) {
+    throw new Error("Missing Google OAuth env configuration");
   }
-}
 
-function getFallbackStore() {
-  if (!globalThis.__REALTOR_MVP_STORE__) {
-    globalThis.__REALTOR_MVP_STORE__ = {
-      refreshToken: process.env.GOOGLE_REFRESH_TOKEN ?? null,
-      calendars: parseCalendarEnv(),
-    };
-  }
-  return globalThis.__REALTOR_MVP_STORE__;
-}
-
-function hasKvConfigured() {
-  return Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-}
-
-async function getStoredConfig(): Promise<StoredConfig> {
-  if (hasKvConfigured()) {
-    const value = await kv.get<StoredConfig>(STORE_KEY);
-    if (value) {
-      return value;
-    }
-  }
-  return getFallbackStore();
-}
-
-async function setStoredConfig(next: StoredConfig) {
-  if (hasKvConfigured()) {
-    await kv.set(STORE_KEY, next);
-  }
-  globalThis.__REALTOR_MVP_STORE__ = next;
+  return new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI,
+  );
 }
 
 export function assertAdminPassword(adminPassword: string | null) {
@@ -78,81 +36,111 @@ export function getAdminPasswordFromRequestHeaders(headers: Record<string, strin
   return Array.isArray(value) ? value[0] : value ?? null;
 }
 
-function getOAuthClient() {
-  if (
-    !process.env.GOOGLE_CLIENT_ID ||
-    !process.env.GOOGLE_CLIENT_SECRET ||
-    !process.env.GOOGLE_REDIRECT_URI
-  ) {
-    throw new Error("Missing Google OAuth env configuration");
-  }
-
-  return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI,
-  );
+export function parseRole(value: unknown): CalendarSlot {
+  return roleSchema.parse(value);
 }
 
-export function createGoogleAuthUrl() {
-  const oauth2 = getOAuthClient();
+function encodeState(role: CalendarSlot) {
+  return Buffer.from(JSON.stringify({ role }), "utf-8").toString("base64url");
+}
+
+export function parseRoleFromState(state: string): CalendarSlot {
+  const decoded = Buffer.from(state, "base64url").toString("utf-8");
+  const parsed = JSON.parse(decoded) as { role?: unknown };
+  return parseRole(parsed.role);
+}
+
+export function createGoogleAuthUrl(role: CalendarSlot) {
+  const oauth2 = createOAuthBaseClient();
   return oauth2.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
     scope: SCOPES,
+    state: encodeState(role),
   });
 }
 
-export async function exchangeCodeForTokens(code: string) {
-  const oauth2 = getOAuthClient();
+export async function connectRoleByAuthCode(role: CalendarSlot, code: string) {
+  const oauth2 = createOAuthBaseClient();
   const { tokens } = await oauth2.getToken(code);
-  if (!tokens.refresh_token) {
-    const current = await getStoredConfig();
-    if (!current.refreshToken) {
-      throw new Error("Google did not return refresh token. Reconnect with consent.");
-    }
-    return;
+
+  const refreshToken = tokens.refresh_token;
+  const accessToken = tokens.access_token;
+  if (!refreshToken || !accessToken) {
+    throw new Error("Google did not return required tokens. Reconnect with consent.");
   }
 
-  const current = await getStoredConfig();
-  await setStoredConfig({
-    ...current,
-    refreshToken: tokens.refresh_token,
-  });
-}
-
-export async function getCalendarClient() {
-  const config = await getStoredConfig();
-  if (!config.refreshToken) {
-    throw new Error("Google account is not connected");
-  }
-
-  const oauth2 = getOAuthClient();
   oauth2.setCredentials({
-    refresh_token: config.refreshToken,
+    refresh_token: refreshToken,
+    access_token: accessToken,
   });
 
-  return google.calendar({ version: "v3", auth: oauth2 });
-}
+  const calendar = google.calendar({ version: "v3", auth: oauth2 });
+  const calendarList = await calendar.calendarList.list();
+  const primary =
+    (calendarList.data.items ?? []).find((item) => item.primary) ??
+    (calendarList.data.items ?? []).find((item) => item.id?.includes("@"));
 
-export async function getCalendarAssignments() {
-  const config = await getStoredConfig();
-  return config.calendars;
-}
-
-export async function setCalendarAssignments(calendars: Record<CalendarSlot, string>) {
-  const current = await getStoredConfig();
-  await setStoredConfig({
-    ...current,
-    calendars,
-  });
-}
-
-export async function resolveCalendarIds(slots: CalendarSlot[]) {
-  const assignments = await getCalendarAssignments();
-  const ids = slots.map((slot) => assignments[slot]).filter(Boolean);
-  if (ids.length !== slots.length) {
-    throw new Error("Google calendars are not fully assigned");
+  if (!primary?.id) {
+    throw new Error("Unable to resolve primary calendar");
   }
-  return ids;
+
+  await saveConnection({
+    role,
+    email: primary.id,
+    refreshToken,
+    calendarId: primary.id,
+  });
+}
+
+export function getOAuthClient(refreshToken: string) {
+  const oauth2 = createOAuthBaseClient();
+  oauth2.setCredentials({
+    refresh_token: refreshToken,
+  });
+  return oauth2;
+}
+
+export async function getConnectionStatuses() {
+  const all = await getAllConnections();
+  return {
+    calendar1: all.calendar1
+      ? {
+          role: all.calendar1.role,
+          email: all.calendar1.email,
+          calendarId: all.calendar1.calendarId,
+        }
+      : null,
+    calendar2: all.calendar2
+      ? {
+          role: all.calendar2.role,
+          email: all.calendar2.email,
+          calendarId: all.calendar2.calendarId,
+        }
+      : null,
+    calendar3: all.calendar3
+      ? {
+          role: all.calendar3.role,
+          email: all.calendar3.email,
+          calendarId: all.calendar3.calendarId,
+        }
+      : null,
+  };
+}
+
+export async function getConnectionsByRoles(roles: CalendarSlot[]) {
+  const all = await getAllConnections();
+  const result = roles
+    .map((role) => all[role])
+    .filter(Boolean)
+    .map((entry) => entry!);
+
+  if (result.length !== roles.length) {
+    throw new Error("Some required calendars are not connected");
+  }
+  return result;
+}
+
+export async function markRoleDisconnected(role: CalendarSlot) {
+  await clearConnection(role);
 }

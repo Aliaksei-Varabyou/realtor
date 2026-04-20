@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { google } from "googleapis";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { isSlotStillAvailable } from "../lib/availability.js";
 import { resolveCalendarSlots } from "../lib/calendarRules.js";
-import { getCalendarClient, resolveCalendarIds } from "../lib/google.js";
+import { getConnectionsByRoles, getOAuthClient, markRoleDisconnected } from "../lib/google.js";
 
 const latinNameRegex = /^[A-Za-z\s'-]+$/;
 
@@ -60,11 +61,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const payload = parsed.data;
-    const slotKeys = resolveCalendarSlots(payload.meetingType, payload.city);
-    const calendarIds = await resolveCalendarIds(slotKeys);
-    const calendar = await getCalendarClient();
+    const roles = resolveCalendarSlots(payload.meetingType, payload.city);
+    const connections = await getConnectionsByRoles(roles);
+    const clients = connections.map((connection) => ({
+      connection,
+      calendar: google.calendar({
+        version: "v3",
+        auth: getOAuthClient(connection.refreshToken),
+      }),
+    }));
 
-    const isAvailable = await isSlotStillAvailable(payload.datetime, calendarIds, calendar);
+    const availabilityChecks = await Promise.all(
+      clients.map(async ({ connection, calendar }) => {
+        try {
+          return await isSlotStillAvailable(payload.datetime, [connection.calendarId], calendar);
+        } catch (error) {
+          const status = (error as { code?: number }).code;
+          if (status === 401) {
+            await markRoleDisconnected(connection.role);
+          }
+          throw error;
+        }
+      }),
+    );
+    const isAvailable = availabilityChecks.every(Boolean);
     if (!isAvailable) {
       return res.status(409).json({ message: "Selected slot is no longer available" });
     }
@@ -98,12 +118,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     await Promise.all(
-      calendarIds.map((calendarId: string) =>
-        calendar.events.insert({
-          calendarId,
-          requestBody: event,
-        }),
-      ),
+      clients.map(async ({ connection, calendar }) => {
+        try {
+          await calendar.events.insert({
+            calendarId: connection.calendarId,
+            requestBody: event,
+          });
+        } catch (error) {
+          const status = (error as { code?: number }).code;
+          if (status === 401) {
+            await markRoleDisconnected(connection.role);
+          }
+          throw error;
+        }
+      }),
     );
 
     return res.status(200).json({ success: true });

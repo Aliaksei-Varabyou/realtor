@@ -18,7 +18,12 @@ type BookingFormData = {
   instagramUrl: string;
 };
 
-type AdminCalendar = { id: string; summary: string };
+type CalendarRole = "calendar1" | "calendar2" | "calendar3";
+type CalendarConnection = {
+  role: CalendarRole;
+  email: string;
+  calendarId: string;
+};
 
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -303,14 +308,25 @@ function AdminPage() {
   const [adminPassword, setAdminPassword] = useState(localStorage.getItem("adminPassword") || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [status, setStatus] = useState(
-    location.search.includes("google=connected") ? "Google connected." : "",
-  );
-  const [availableCalendars, setAvailableCalendars] = useState<AdminCalendar[]>([]);
-  const [assigned, setAssigned] = useState({
-    calendar1: "",
-    calendar2: "",
-    calendar3: "",
+  const [status] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    const role = params.get("role");
+    if (params.get("google") === "connected") {
+      return role ? `${role} connected.` : "Google connected.";
+    }
+    if (params.get("google") === "error") {
+      return "Google connection failed.";
+    }
+    return "";
+  });
+  const [connections, setConnections] = useState<{
+    calendar1: CalendarConnection | null;
+    calendar2: CalendarConnection | null;
+    calendar3: CalendarConnection | null;
+  }>({
+    calendar1: null,
+    calendar2: null,
+    calendar3: null,
   });
   const [loading, setLoading] = useState(false);
 
@@ -328,12 +344,14 @@ function AdminPage() {
     setError("");
     try {
       const calendarData = await authorizedRequest<{
-        availableCalendars: AdminCalendar[];
-        assigned: { calendar1: string; calendar2: string; calendar3: string };
+        connections: {
+          calendar1: CalendarConnection | null;
+          calendar2: CalendarConnection | null;
+          calendar3: CalendarConnection | null;
+        };
       }>("/api/admin-calendars");
 
-      setAvailableCalendars(calendarData.availableCalendars);
-      setAssigned(calendarData.assigned);
+      setConnections(calendarData.connections);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load admin data");
     } finally {
@@ -359,29 +377,12 @@ function AdminPage() {
     setAdminPassword(password);
   };
 
-  const connectGoogle = async () => {
-    setError("");
-    try {
-      const data = await authorizedRequest<{ url: string }>("/api/auth");
-      window.location.href = data.url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Google connect failed");
-    }
-  };
-
-  const saveAssignments = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError("");
-    setStatus("");
-    try {
-      await authorizedRequest<{ success: true }>("/api/admin-calendars", {
-        method: "PUT",
-        body: JSON.stringify(assigned),
-      });
-      setStatus("Calendar assignments saved.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Save failed");
-    }
+  const connectGoogle = (role: CalendarRole) => {
+    const params = new URLSearchParams({
+      role,
+      adminPassword,
+    });
+    window.location.href = `/api/auth?${params.toString()}`;
   };
 
   if (!adminPassword) {
@@ -431,40 +432,24 @@ function AdminPage() {
       </header>
 
       <section className="card">
-        <h2>Google Calendar Connection</h2>
-        <button type="button" onClick={connectGoogle}>
-          Connect Google Calendars
-        </button>
+        <h2>Google Calendar Connections</h2>
+        {(["calendar1", "calendar2", "calendar3"] as const).map((role) => {
+          const connection = connections[role];
+          return (
+            <div key={role} className="row">
+              <div>
+                <strong>{role}</strong>:{" "}
+                {connection ? `connected (${connection.email})` : "not connected"}
+              </div>
+              <button type="button" onClick={() => connectGoogle(role)}>
+                {connection ? `Reconnect ${role}` : `Connect ${role}`}
+              </button>
+            </div>
+          );
+        })}
       </section>
 
-      <form className="card formGrid" onSubmit={saveAssignments}>
-        <h2>Calendar Assignment</h2>
-        {(["calendar1", "calendar2", "calendar3"] as const).map((slot) => (
-          <label key={slot}>
-            {slot}
-            <select
-              value={assigned[slot]}
-              onChange={(e) =>
-                setAssigned((prev) => ({
-                  ...prev,
-                  [slot]: e.target.value,
-                }))
-              }
-              required
-            >
-              <option value="">Select calendar</option>
-              {availableCalendars.map((calendar) => (
-                <option key={calendar.id} value={calendar.id}>
-                  {calendar.summary}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
-        <button type="submit">Save assignments</button>
-      </form>
-
-      {loading && <p className="hint">Loading calendars...</p>}
+      {loading && <p className="hint">Loading connections...</p>}
       {error && <p className="error">{error}</p>}
       {status && <p className="success">{status}</p>}
     </main>
