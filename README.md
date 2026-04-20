@@ -1,73 +1,101 @@
-# React + TypeScript + Vite
+# Realtor Booking MVP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Simple full-stack MVP for a real estate agency booking flow.
 
-Currently, two official plugins are available:
+- Frontend: React + TypeScript (Vite)
+- Backend: Node.js + Express (TypeScript)
+- DB: SQLite via Prisma
+- Calendar: Google Calendar API (FreeBusy + event creation)
+- Admin auth: password-based login (JWT token)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Project structure
 
-## React Compiler
+- `src/` - frontend app (public booking form + admin panel)
+- `backend/` - Express API + Prisma schema + Google integration
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment setup
 
-## Expanding the ESLint configuration
+### Frontend env
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Copy `.env.example` to `.env`
+2. Set API URL if needed:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_API_URL="http://localhost:4000"
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Backend env
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1. Copy `backend/.env.example` to `backend/.env`
+2. Fill values:
+   - `ADMIN_PASSWORD`
+   - `ADMIN_JWT_SECRET`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
+   - `GOOGLE_REDIRECT_URI` (must match Google OAuth app settings)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Run locally
+
+Install dependencies:
+
+```bash
+npm install
+cd backend && npm install
 ```
+
+Initialize Prisma/SQLite:
+
+```bash
+cd backend
+npx prisma generate
+npx prisma db push
+```
+
+Start backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Start frontend (in another terminal):
+
+```bash
+npm run dev
+```
+
+Frontend: [http://localhost:5173](http://localhost:5173)  
+Backend: [http://localhost:4000](http://localhost:4000)
+
+## Main flows
+
+### Public booking form
+
+- Requires `meetingType` + `city` before time selection
+- Loads available 30-minute slots from backend
+- Requires at least one contact after slot selection:
+  - Telegram username OR Instagram URL
+- Re-checks slot before booking creation
+- Creates event in all selected calendars and stores booking in DB
+
+### Calendar selection rules
+
+- consultation OR city=other -> `calendar1`
+- mortgage + wroclaw -> `calendar1` + `calendar2`
+- mortgage + warsaw -> `calendar1` + `calendar3`
+
+### Availability rules
+
+- FreeBusy data from selected calendars
+- Merged busy intervals
+- 30 min slots
+- Working hours 09:00-18:00 (Europe/Warsaw)
+- Excludes past times
+- Applies 15-minute buffer around meetings
+
+### Admin panel
+
+- Login with password (`/admin`)
+- Connect Google account (OAuth2)
+- Assign `calendar1`, `calendar2`, `calendar3`
+- View upcoming bookings from SQLite
