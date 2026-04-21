@@ -35,7 +35,7 @@ async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    let message = "Request failed";
+    let message = "Ошибка запроса";
     try {
       const body = await response.json();
       message = body.message || message;
@@ -122,11 +122,11 @@ function BookingPage() {
     setSuccess("");
 
     if (!form.meetingDateTime) {
-      setError("Please select a time slot");
+      setError("Пожалуйста, выберите временной слот");
       return;
     }
     if (!form.telegramUsername.trim() && !form.instagramUrl.trim()) {
-      setError("Provide telegram username or instagram URL");
+      setError("Укажите Telegram username или ссылку Instagram");
       return;
     }
 
@@ -147,7 +147,7 @@ function BookingPage() {
           },
         }),
       });
-      setSuccess("Booking confirmed. We have added it to our calendars.");
+      setSuccess("Бронирование подтверждено. Встреча добавлена в календарь.");
       setForm((prev) => ({
         ...prev,
         fullName: "",
@@ -159,7 +159,7 @@ function BookingPage() {
       }));
       setAvailableSlots((prev) => prev.filter((item) => item !== form.meetingDateTime));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not create booking");
+      setError(e instanceof Error ? e.message : "Не удалось создать бронирование");
     } finally {
       setSubmitting(false);
     }
@@ -168,26 +168,26 @@ function BookingPage() {
   return (
     <main className="page">
       <header className="header">
-        <h1>Realtor Booking</h1>
-        <p>Schedule mortgage and consultation meetings in Europe/Warsaw timezone.</p>
+        <h1>Запись на встречу</h1>
+        <p>Запланируйте встречу по часовому поясу Europe/Warsaw.</p>
         <Link to="/admin" className="textLink">
-          Admin panel
+          Админ-панель
         </Link>
       </header>
 
       <form className="card formGrid" onSubmit={submitBooking}>
         <label>
-          Full name *
+          ФИО *
           <input
             value={form.fullName}
             onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
-            placeholder="John Smith"
+            placeholder="Иван Иванов"
             required
           />
         </label>
 
         <label>
-          Phone *
+          Телефон *
           <input
             value={form.phone}
             onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -205,7 +205,7 @@ function BookingPage() {
         </label>
 
         <label>
-          Meeting type *
+          Тип услуги *
           <select
             value={form.meetingType}
             onChange={(e) =>
@@ -216,14 +216,14 @@ function BookingPage() {
             }
             required
           >
-            <option value="">Select...</option>
-            <option value="mortgage">mortgage</option>
-            <option value="consultation">consultation</option>
+            <option value="">Выберите...</option>
+            <option value="mortgage">ипотечное кредитование/просчет кредитоспособности</option>
+            <option value="consultation">консультация покупка/продажа</option>
           </select>
         </label>
 
         <label>
-          City *
+          Город *
           <select
             value={form.city}
             onChange={(e) =>
@@ -231,15 +231,15 @@ function BookingPage() {
             }
             required
           >
-            <option value="">Select...</option>
-            <option value="wroclaw">wroclaw</option>
-            <option value="warsaw">warsaw</option>
-            <option value="other">other</option>
+            <option value="">Выберите...</option>
+            <option value="wroclaw">Вроцлав</option>
+            <option value="warsaw">Варшава</option>
+            <option value="other">Другой</option>
           </select>
         </label>
 
         <label>
-          Date *
+          Дата *
           <input
             type="date"
             value={form.date}
@@ -250,10 +250,10 @@ function BookingPage() {
         </label>
 
         <fieldset className="slotSection" disabled={!form.meetingType || !form.city}>
-          <legend>Meeting time *</legend>
-          {loadingSlots && <p className="hint">Loading available slots...</p>}
+          <legend>Время встречи *</legend>
+          {loadingSlots && <p className="hint">Загрузка доступных слотов...</p>}
           {!loadingSlots && canLoadSlots && groupedSlots.length === 0 && (
-            <p className="hint">No available slots for this day.</p>
+            <p className="hint">На выбранный день нет свободных слотов.</p>
           )}
           <div className="slots">
             {groupedSlots.map((slot) => (
@@ -278,7 +278,7 @@ function BookingPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, telegramUsername: e.target.value }))
                 }
-                placeholder="@yourname"
+                placeholder="@username"
               />
             </label>
             <label>
@@ -296,7 +296,7 @@ function BookingPage() {
         {success && <p className="success">{success}</p>}
 
         <button type="submit" disabled={submitting || !form.meetingDateTime}>
-          {submitting ? "Booking..." : "Book meeting"}
+          {submitting ? "Бронирование..." : "Забронировать встречу"}
         </button>
       </form>
     </main>
@@ -315,7 +315,7 @@ function AdminPage() {
       return role ? `${role} connected.` : "Google connected.";
     }
     if (params.get("google") === "error") {
-      return "Google connection failed.";
+      return "Не удалось подключить Google.";
     }
     return "";
   });
@@ -353,7 +353,7 @@ function AdminPage() {
 
       setConnections(calendarData.connections);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load admin data");
+      setError(e instanceof Error ? e.message : "Не удалось загрузить данные админки");
     } finally {
       setLoading(false);
     }
@@ -370,7 +370,7 @@ function AdminPage() {
     event.preventDefault();
     setError("");
     if (!password.trim()) {
-      setError("Password is required");
+      setError("Введите пароль");
       return;
     }
     localStorage.setItem("adminPassword", password);
@@ -391,12 +391,12 @@ function AdminPage() {
         <header className="header">
           <h1>Admin Login</h1>
           <Link to="/" className="textLink">
-            Back to booking form
+            Назад к форме бронирования
           </Link>
         </header>
         <form className="card" onSubmit={login}>
           <label>
-            Password
+            Пароль
             <input
               type="password"
               value={password}
@@ -405,7 +405,7 @@ function AdminPage() {
             />
           </label>
           {error && <p className="error">{error}</p>}
-          <button type="submit">Login</button>
+          <button type="submit">Войти</button>
         </form>
       </main>
     );
@@ -417,7 +417,7 @@ function AdminPage() {
         <h1>Admin Panel</h1>
         <div className="row">
           <Link to="/" className="textLink">
-            Back to booking form
+            Назад к форме бронирования
           </Link>
           <button
             type="button"
@@ -426,30 +426,30 @@ function AdminPage() {
               setAdminPassword("");
             }}
           >
-            Logout
+            Выйти
           </button>
         </div>
       </header>
 
       <section className="card">
-        <h2>Google Calendar Connections</h2>
+        <h2>Подключения Google Календарей</h2>
         {(["calendar1", "calendar2", "calendar3"] as const).map((role) => {
           const connection = connections[role];
           return (
             <div key={role} className="row">
               <div>
                 <strong>{role}</strong>:{" "}
-                {connection ? `connected (${connection.email})` : "not connected"}
+                {connection ? `подключен (${connection.email})` : "не подключен"}
               </div>
               <button type="button" onClick={() => connectGoogle(role)}>
-                {connection ? `Reconnect ${role}` : `Connect ${role}`}
+                {connection ? `Переподключить ${role}` : `Подключить ${role}`}
               </button>
             </div>
           );
         })}
       </section>
 
-      {loading && <p className="hint">Loading connections...</p>}
+      {loading && <p className="hint">Загрузка подключений...</p>}
       {error && <p className="error">{error}</p>}
       {status && <p className="success">{status}</p>}
     </main>
