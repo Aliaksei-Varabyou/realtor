@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import { z } from "zod";
 import type { CalendarSlot } from "./calendarRules.js";
-import { clearConnection, getAllConnections, saveConnection } from "./storage.js";
+import { clearConnection, getConnections, saveConnection } from "./storage.js";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 const roleSchema = z.enum(["calendar1", "calendar2", "calendar3"]);
@@ -63,6 +63,7 @@ export function createGoogleAuthUrl(role: CalendarSlot) {
 export async function connectRoleByAuthCode(role: CalendarSlot, code: string) {
   const oauth2 = createOAuthBaseClient();
   const { tokens } = await oauth2.getToken(code);
+  console.log("Google OAuth tokens:", tokens);
 
   const refreshToken = tokens.refresh_token;
   const accessToken = tokens.access_token;
@@ -102,7 +103,7 @@ export function getOAuthClient(refreshToken: string) {
 }
 
 export async function getConnectionStatuses() {
-  const all = await getAllConnections();
+  const all = await getConnections();
   return {
     calendar1: all.calendar1
       ? {
@@ -129,7 +130,7 @@ export async function getConnectionStatuses() {
 }
 
 export async function getConnectionsByRoles(roles: CalendarSlot[]) {
-  const all = await getAllConnections();
+  const all = await getConnections();
   const result = roles
     .map((role) => all[role])
     .filter(Boolean)
