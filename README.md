@@ -5,7 +5,7 @@ Vite React app with Vercel serverless API routes for booking and Google Calendar
 - Frontend: React + TypeScript (Vite)
 - Backend: Vercel API routes (`/api/*`)
 - Google API: `googleapis` OAuth2 + Calendar FreeBusy/events
-- Storage: Vercel KV (preferred) with env/in-memory fallback
+- Storage: Redis via `REDIS_URL` (`ioredis`)
 
 ## Project structure
 
@@ -34,9 +34,7 @@ Copy `.env.example` to `.env` and fill:
 
 Optional:
 
-- `KV_REST_API_URL`
-- `KV_REST_API_TOKEN`
-- `GOOGLE_CONNECTIONS_JSON` (fallback only)
+- `REDIS_URL`
 
 ## Local development
 
@@ -86,7 +84,7 @@ Vite proxies `/api` requests to port `3000`.
 3. Set build command: `npm run build`.
 4. Set output directory: `dist`.
 5. Add all env vars from `.env.example` in Vercel project settings.
-6. If using KV, connect a Vercel KV database and expose its env vars.
+6. Configure `REDIS_URL` in Vercel project env vars.
 7. Update Google OAuth redirect URI to:
    - `https://YOUR_DOMAIN/api/auth/callback`
 8. Deploy.

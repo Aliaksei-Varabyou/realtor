@@ -104,26 +104,27 @@ export function getOAuthClient(refreshToken: string) {
 
 export async function getConnectionStatuses() {
   const all = await getConnections();
+  const byRole = new Map(all.map((connection) => [connection.role, connection]));
   return {
-    calendar1: all.calendar1
+    calendar1: byRole.get("calendar1")
       ? {
-          role: all.calendar1.role,
-          email: all.calendar1.email,
-          calendarId: all.calendar1.calendarId,
+          role: byRole.get("calendar1")!.role,
+          email: byRole.get("calendar1")!.email,
+          calendarId: byRole.get("calendar1")!.calendarId,
         }
       : null,
-    calendar2: all.calendar2
+    calendar2: byRole.get("calendar2")
       ? {
-          role: all.calendar2.role,
-          email: all.calendar2.email,
-          calendarId: all.calendar2.calendarId,
+          role: byRole.get("calendar2")!.role,
+          email: byRole.get("calendar2")!.email,
+          calendarId: byRole.get("calendar2")!.calendarId,
         }
       : null,
-    calendar3: all.calendar3
+    calendar3: byRole.get("calendar3")
       ? {
-          role: all.calendar3.role,
-          email: all.calendar3.email,
-          calendarId: all.calendar3.calendarId,
+          role: byRole.get("calendar3")!.role,
+          email: byRole.get("calendar3")!.email,
+          calendarId: byRole.get("calendar3")!.calendarId,
         }
       : null,
   };
@@ -132,7 +133,7 @@ export async function getConnectionStatuses() {
 export async function getConnectionsByRoles(roles: CalendarSlot[]) {
   const all = await getConnections();
   const result = roles
-    .map((role) => all[role])
+    .map((role) => all.find((connection) => connection.role === role))
     .filter(Boolean)
     .map((entry) => entry!);
 
