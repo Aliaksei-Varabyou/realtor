@@ -170,14 +170,7 @@ function BookingPage() {
       <section className="bookingPanel">
         <header className="brandHeader">
           <Link to="/" className="brand">
-            <span className="brandMark" aria-hidden="true">
-              ND
-            </span>
-            <span>
-              Независимость
-              <br />
-              Дом
-            </span>
+            <img className="brandLogo" src="/logo.svg" alt="Независимость Дом" />
           </Link>
           <Link to="/admin" className="textLink menuLink">
             меню

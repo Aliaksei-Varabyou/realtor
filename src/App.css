@@ -46,27 +46,13 @@
 
 .brand {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #9a654f;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 0.95;
   text-decoration: none;
 }
 
-.brandMark {
-  width: 22px;
-  height: 22px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 999px;
-  background: #d3a06d;
-  color: #f8f4eb;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 8px;
-  letter-spacing: 0.04em;
+.brandLogo {
+  display: block;
+  width: 145px;
+  height: auto;
 }
 
 .menuLink {
