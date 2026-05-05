@@ -8,7 +8,7 @@
 }
 
 .bookingPage {
-  width: min(100%, 420px);
+  width: min(100%, 840px);
   align-content: center;
 }
 
@@ -16,7 +16,7 @@
   position: relative;
   display: grid;
   gap: 20px;
-  padding: 24px 18px 26px;
+  padding: 28px 24px 30px;
   background: linear-gradient(180deg, rgba(232, 220, 195, 0.92), rgba(238, 232, 215, 0.98));
   border: 1px solid rgba(151, 104, 80, 0.14);
   border-radius: 4px;
@@ -89,7 +89,7 @@
 }
 
 .heroCopy p {
-  max-width: 270px;
+  max-width: 420px;
   margin: 8px 0 0;
   color: #a67957;
   font-size: 13px;
@@ -112,7 +112,7 @@
 }
 
 .formGrid {
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .formGrid > fieldset,
@@ -289,6 +289,16 @@ td {
 
 .adminPage .card {
   background: rgba(250, 248, 243, 0.94);
+}
+
+@media (max-width: 768px) {
+  .bookingPage {
+    width: min(100%, 420px);
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
