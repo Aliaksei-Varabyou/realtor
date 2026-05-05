@@ -1,27 +1,118 @@
 .page {
-  max-width: 840px;
+  width: min(100%, 920px);
+  min-height: 100vh;
   margin: 0 auto;
-  padding: 20px;
+  padding: 44px 20px;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
+.bookingPage {
+  width: min(100%, 420px);
+  align-content: center;
+}
+
+.bookingPanel {
+  position: relative;
+  display: grid;
+  gap: 20px;
+  padding: 24px 18px 26px;
+  background: linear-gradient(180deg, rgba(232, 220, 195, 0.92), rgba(238, 232, 215, 0.98));
+  border: 1px solid rgba(151, 104, 80, 0.14);
+  border-radius: 4px;
+  box-shadow: 0 22px 60px rgba(74, 58, 46, 0.14);
+}
+
+.bookingPanel::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  pointer-events: none;
+}
+
+.brandHeader,
 .header {
   display: grid;
   gap: 8px;
 }
 
+.brandHeader {
+  position: relative;
+  z-index: 1;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #9a654f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 0.95;
+  text-decoration: none;
+}
+
+.brandMark {
+  width: 22px;
+  height: 22px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #d3a06d;
+  color: #f8f4eb;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.menuLink {
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 1;
+}
+
+.heroCopy h1 {
+  color: #bf875d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(30px, 9vw, 42px);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.heroCopy p {
+  max-width: 270px;
+  margin: 8px 0 0;
+  color: #a67957;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .card {
-  background: #fff;
-  border: 1px solid #d8dce5;
+  position: relative;
+  z-index: 1;
+  background: rgba(250, 248, 243, 0.92);
+  border: 1px solid rgba(154, 101, 79, 0.12);
   border-radius: 12px;
-  padding: 16px;
+  padding: 18px;
   display: grid;
   gap: 12px;
 }
 
+.bookingForm {
+  box-shadow: 0 12px 28px rgba(74, 58, 46, 0.08);
+}
+
 .formGrid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .formGrid > fieldset,
@@ -33,25 +124,59 @@
 
 label {
   display: grid;
-  gap: 6px;
-  font-size: 14px;
-  color: #334155;
+  gap: 5px;
+  color: #b07155;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 input,
 select,
 button {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 14px;
+  width: 100%;
+  padding: 10px 11px;
+  border-radius: 4px;
+  border: 1px solid rgba(154, 101, 79, 0.18);
+  font: inherit;
+  font-size: 13px;
+}
+
+input,
+select {
+  background: #f8f4eb;
+  color: #624436;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background 150ms ease;
+}
+
+input:focus,
+select:focus {
+  background: #fffbf4;
+  border-color: #d09d68;
+  box-shadow: 0 0 0 3px rgba(208, 157, 104, 0.16);
 }
 
 button {
-  background: #0f172a;
-  color: #fff;
+  min-height: 42px;
+  background: #829274;
+  color: #fffaf1;
   border: none;
   cursor: pointer;
+  font-weight: 700;
+  transition:
+    background 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+button:hover:not(:disabled) {
+  background: #738467;
+  box-shadow: 0 10px 22px rgba(115, 132, 103, 0.18);
+  transform: translateY(-1px);
 }
 
 button:disabled {
@@ -60,9 +185,17 @@ button:disabled {
 }
 
 .slotSection {
-  border: 1px solid #dbe2ea;
-  border-radius: 8px;
+  border: 1px solid rgba(154, 101, 79, 0.14);
+  border-radius: 10px;
   padding: 12px;
+  color: #a67957;
+}
+
+.slotSection legend {
+  padding: 0 5px;
+  color: #b07155;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .slots {
@@ -72,39 +205,51 @@ button:disabled {
 }
 
 .slotButton {
-  background: #e2e8f0;
-  color: #0f172a;
+  width: auto;
+  min-height: 36px;
+  background: #e5d8bc;
+  color: #7c5948;
 }
 
 .slotButton.active {
-  background: #0f172a;
-  color: #fff;
+  background: #829274;
+  color: #fffaf1;
 }
 
 .hint {
   margin: 0;
-  color: #475569;
+  color: #8a7a63;
+  font-size: 13px;
 }
 
 .error {
   margin: 0;
-  color: #b91c1c;
+  color: #9a4d3d;
+  font-size: 13px;
 }
 
 .success {
   margin: 0;
-  color: #047857;
+  color: #667b5d;
+  font-size: 13px;
 }
 
 .textLink {
-  color: #2563eb;
+  color: #9a654f;
   text-decoration: none;
+  font-weight: 700;
+}
+
+.textLink:hover {
+  color: #7d4f3c;
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .tableWrap {
@@ -119,13 +264,43 @@ table {
 
 th,
 td {
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(154, 101, 79, 0.14);
   text-align: left;
   padding: 8px;
 }
 
-@media (max-width: 768px) {
-  .formGrid {
-    grid-template-columns: 1fr;
+.adminPage {
+  align-content: start;
+}
+
+.adminPage .header h1,
+.adminPage h2 {
+  color: #bf875d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.adminPage .header {
+  padding: 22px;
+  background: rgba(232, 220, 195, 0.86);
+  border: 1px solid rgba(154, 101, 79, 0.12);
+  border-radius: 12px;
+}
+
+.adminPage .card {
+  background: rgba(250, 248, 243, 0.94);
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 22px 14px;
+  }
+
+  .bookingPanel {
+    padding: 22px 14px 24px;
+  }
+
+  .card {
+    padding: 14px;
   }
 }

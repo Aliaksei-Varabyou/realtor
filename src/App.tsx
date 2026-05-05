@@ -166,16 +166,30 @@ function BookingPage() {
   };
 
   return (
-    <main className="page">
-      <header className="header">
-        <h1>Запись на встречу</h1>
-        <p>Запланируйте встречу по часовому поясу Europe/Warsaw.</p>
-        <Link to="/admin" className="textLink">
-          Админ-панель
-        </Link>
-      </header>
+    <main className="page bookingPage">
+      <section className="bookingPanel">
+        <header className="brandHeader">
+          <Link to="/" className="brand">
+            <span className="brandMark" aria-hidden="true">
+              ND
+            </span>
+            <span>
+              Независимость
+              <br />
+              Дом
+            </span>
+          </Link>
+          <Link to="/admin" className="textLink menuLink">
+            меню
+          </Link>
+        </header>
 
-      <form className="card formGrid" onSubmit={submitBooking}>
+        <div className="heroCopy">
+          <h1>Запись на встречу</h1>
+          <p>Запланируйте встречу по часовому поясу Europe/Warsaw.</p>
+        </div>
+
+        <form className="card formGrid bookingForm" onSubmit={submitBooking}>
         <label>
           ФИО *
           <input
@@ -298,7 +312,8 @@ function BookingPage() {
         <button type="submit" disabled={submitting || !form.meetingDateTime}>
           {submitting ? "Бронирование..." : "Забронировать встречу"}
         </button>
-      </form>
+        </form>
+      </section>
     </main>
   );
 }
@@ -387,7 +402,7 @@ function AdminPage() {
 
   if (!adminPassword) {
     return (
-      <main className="page">
+      <main className="page adminPage">
         <header className="header">
           <h1>Admin Login</h1>
           <Link to="/" className="textLink">
@@ -412,7 +427,7 @@ function AdminPage() {
   }
 
   return (
-    <main className="page">
+    <main className="page adminPage">
       <header className="header">
         <h1>Admin Panel</h1>
         <div className="row">

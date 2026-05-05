@@ -5,8 +5,15 @@
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #f2f4f8;
-  color: #0f172a;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(247, 246, 240, 0.95) 0 88px, transparent 89px),
+    radial-gradient(circle at 29% 0%, rgba(229, 216, 188, 0.92) 0 96px, transparent 97px),
+    radial-gradient(circle at 50% 0%, rgba(208, 157, 104, 0.9) 0 96px, transparent 97px),
+    radial-gradient(circle at 71% 0%, rgba(130, 146, 116, 0.9) 0 96px, transparent 97px),
+    radial-gradient(circle at 92% 0%, rgba(150, 99, 78, 0.9) 0 96px, transparent 97px),
+    #f6f5f2;
+  background-repeat: no-repeat;
+  color: #624436;
 }
 
 #root {
