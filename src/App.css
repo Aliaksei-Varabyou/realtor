@@ -44,9 +44,21 @@
   align-items: start;
 }
 
+.brandHeader::after {
+  content: "";
+  position: absolute;
+  top: 26px;
+  left: 92px;
+  right: 4px;
+  border-top: 1px solid #C7996E;
+  pointer-events: none;
+}
+
 .brand {
   display: inline-flex;
   text-decoration: none;
+  position: relative;
+  z-index: 1;
 }
 
 .brandLogo {
@@ -58,6 +70,8 @@
 .menuLink {
   margin-top: 2px;
   font-size: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .heroCopy {
@@ -69,16 +83,15 @@
   color: #C7996E;
   font-size: clamp(30px, 9vw, 42px);
   font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
+  line-height: 30px;
+  letter-spacing: 0;
 }
 
 .heroCopy p {
-  max-width: 420px;
-  margin: 8px 0 0;
+  margin: 16px 0 0;
   color: #C7996E;
-  font-size: 13px;
-  line-height: 1.35;
+  font-size: 16px;
+  line-height: 100%;
 }
 
 .card {
@@ -134,14 +147,14 @@ button {
   height: 37px;
   padding: 10px 11px;
   border-radius: 6px;
-  border: 1px solid rgba(225, 210, 186, 1);
+  border: 1px solid #E1D2BA;
   font: inherit;
   font-size: 13px;
 }
 
 input,
 select {
-  background: #f8f4eb;
+  background: #F1F0EC;
   color: #624436;
   outline: none;
   transition:
@@ -155,6 +168,15 @@ select:focus {
   background: #fffbf4;
   border-color: #d09d68;
   box-shadow: 0 0 0 3px rgba(208, 157, 104, 0.16);
+}
+
+input:disabled,
+select:disabled {
+  background: #E9E3D6;
+  border-color: #E1D2BA;
+  color: #624436;
+  opacity: 1;
+  -webkit-text-fill-color: #624436;
 }
 
 button {
@@ -171,7 +193,7 @@ button {
 }
 
 button:hover:not(:disabled) {
-  background: #738467;
+  background: #E9E3D6;
   box-shadow: 0 10px 22px rgba(115, 132, 103, 0.18);
   transform: translateY(-1px);
 }
@@ -217,6 +239,13 @@ button:disabled {
   margin: 0;
   color: #8a7a63;
   font-size: 13px;
+}
+
+.contactRequirement {
+  margin: 0;
+  color: #9a4d3d;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .error {

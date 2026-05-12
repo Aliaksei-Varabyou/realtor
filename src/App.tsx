@@ -5,6 +5,7 @@ import "./App.css";
 
 type MeetingType = "mortgage" | "consultation";
 type City = "wroclaw" | "warsaw" | "other";
+type MeetingFormat = "online" | "offline";
 
 type BookingFormData = {
   fullName: string;
@@ -12,6 +13,7 @@ type BookingFormData = {
   email: string;
   meetingType: "" | MeetingType;
   city: "" | City;
+  meetingFormat: "" | MeetingFormat;
   date: string;
   meetingDateTime: string;
   telegramUsername: string;
@@ -56,6 +58,7 @@ function BookingPage() {
     email: "",
     meetingType: "",
     city: "",
+    meetingFormat: "",
     date: today,
     meetingDateTime: "",
     telegramUsername: "",
@@ -140,6 +143,7 @@ function BookingPage() {
           email: form.email,
           meetingType: form.meetingType,
           city: form.city,
+          meetingFormat: form.meetingFormat,
           datetime: form.meetingDateTime,
           contact: {
             telegramUsername: form.telegramUsername,
@@ -154,6 +158,7 @@ function BookingPage() {
         phone: "",
         email: "",
         meetingDateTime: "",
+        meetingFormat: "",
         telegramUsername: "",
         instagramUrl: "",
       }));
@@ -247,6 +252,24 @@ function BookingPage() {
         </label>
 
         <label>
+          <span>Вид встречи <span className="requiredMark">*</span></span>
+          <select
+            value={form.meetingFormat}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                meetingFormat: e.target.value as BookingFormData["meetingFormat"],
+              }))
+            }
+            required
+          >
+            <option value="">Выберите...</option>
+            <option value="online">Онлайн</option>
+            <option value="offline">Офлайн</option>
+          </select>
+        </label>
+
+        <label>
           <span>Дата <span className="requiredMark">*</span></span>
           <input
             type="date"
@@ -279,6 +302,7 @@ function BookingPage() {
 
         {form.meetingDateTime && (
           <>
+            <p className="contactRequirement">Обязательно укажите телеграмм ИЛИ инстаграм</p>
             <label>
               Telegram username
               <input

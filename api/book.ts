@@ -15,6 +15,7 @@ const schema = z
     email: z.string().email().optional().or(z.literal("")),
     meetingType: z.enum(["mortgage", "consultation"]),
     city: z.enum(["wroclaw", "warsaw", "other"]),
+    meetingFormat: z.enum(["online", "offline"]),
     datetime: z
       .string()
       .refine(
@@ -98,6 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         : null,
       payload.contact.instagramUrl?.trim() ? `instagram: ${payload.contact.instagramUrl.trim()}` : null,
     ].filter(Boolean);
+    const meetingFormatLabel = payload.meetingFormat === "online" ? "Онлайн" : "Офлайн";
 
     const event = {
       summary: `${payload.meetingType} - ${payload.fullName}`,
@@ -105,6 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `phone: ${payload.phone}`,
         `email: ${payload.email || "n/a"}`,
         `city: ${payload.city}`,
+        `meeting format: ${meetingFormatLabel}`,
         `contact: ${contactLines.join(" | ")}`,
       ].join("\n"),
       start: {
