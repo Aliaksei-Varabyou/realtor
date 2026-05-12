@@ -142,9 +142,9 @@ label {
 
 input,
 select,
+textarea,
 button {
   width: 100%;
-  height: 37px;
   padding: 10px 11px;
   border-radius: 6px;
   border: 1px solid #E1D2BA;
@@ -153,7 +153,14 @@ button {
 }
 
 input,
-select {
+select,
+button {
+  height: 37px;
+}
+
+input,
+select,
+textarea {
   background: #F1F0EC;
   color: #624436;
   outline: none;
@@ -164,19 +171,26 @@ select {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   background: #fffbf4;
   border-color: #d09d68;
   box-shadow: 0 0 0 3px rgba(208, 157, 104, 0.16);
 }
 
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   background: #E9E3D6;
   border-color: #E1D2BA;
   color: #624436;
   opacity: 1;
   -webkit-text-fill-color: #624436;
+}
+
+textarea {
+  min-height: 96px;
+  resize: vertical;
 }
 
 button {
@@ -316,12 +330,23 @@ td {
   background: rgba(250, 248, 243, 0.94);
 }
 
+.adminSettingsForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.adminSettingsForm > h2,
+.adminSettingsForm > button,
+.adminSettingsForm > label:nth-of-type(n + 3) {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 768px) {
   .bookingPage {
     width: min(100%, 420px);
   }
 
-  .formGrid {
+  .formGrid,
+  .adminSettingsForm {
     grid-template-columns: 1fr;
   }
 }

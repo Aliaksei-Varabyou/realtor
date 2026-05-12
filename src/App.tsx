@@ -27,6 +27,26 @@ type CalendarConnection = {
   calendarId: string;
 };
 
+type AdminSettings = {
+  email1: string;
+  email2: string;
+  mortgageOnlineText: string;
+  mortgageOfflineText: string;
+  consultationPurchaseSaleText: string;
+  mortgageOnlineWarsawText: string;
+  mortgageOfflineWarsawText: string;
+};
+
+const defaultAdminSettings: AdminSettings = {
+  email1: "",
+  email2: "",
+  mortgageOnlineText: "",
+  mortgageOfflineText: "",
+  consultationPurchaseSaleText: "",
+  mortgageOnlineWarsawText: "",
+  mortgageOfflineWarsawText: "",
+};
+
 async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
@@ -361,7 +381,10 @@ function AdminPage() {
     calendar2: null,
     calendar3: null,
   });
+  const [settings, setSettings] = useState<AdminSettings>(defaultAdminSettings);
   const [loading, setLoading] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsStatus, setSettingsStatus] = useState("");
 
   const authorizedRequest = async <T,>(path: string, init?: RequestInit) =>
     apiRequest<T>(path, {
@@ -382,9 +405,11 @@ function AdminPage() {
           calendar2: CalendarConnection | null;
           calendar3: CalendarConnection | null;
         };
+        settings: AdminSettings;
       }>("/api/admin-calendars");
 
       setConnections(calendarData.connections);
+      setSettings(calendarData.settings);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось загрузить данные админки");
     } finally {
@@ -416,6 +441,26 @@ function AdminPage() {
       adminPassword,
     });
     window.location.href = `/api/auth?${params.toString()}`;
+  };
+
+  const saveSettings = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSavingSettings(true);
+    setError("");
+    setSettingsStatus("");
+
+    try {
+      const data = await authorizedRequest<{ settings: AdminSettings }>("/api/admin-calendars", {
+        method: "POST",
+        body: JSON.stringify(settings),
+      });
+      setSettings(data.settings);
+      setSettingsStatus("Настройки сохранены.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось сохранить настройки");
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   if (!adminPassword) {
@@ -482,9 +527,86 @@ function AdminPage() {
         })}
       </section>
 
+      <form className="card adminSettingsForm" onSubmit={saveSettings}>
+        <h2>Настройки текстов и емейлов</h2>
+
+        <label>
+          Емейл1
+          <input
+            type="email"
+            value={settings.email1}
+            onChange={(e) => setSettings((prev) => ({ ...prev, email1: e.target.value }))}
+          />
+        </label>
+
+        <label>
+          Емейл2
+          <input
+            type="email"
+            value={settings.email2}
+            onChange={(e) => setSettings((prev) => ({ ...prev, email2: e.target.value }))}
+          />
+        </label>
+
+        <label>
+          Ипотечное онлайн
+          <textarea
+            value={settings.mortgageOnlineText}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOnlineText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Ипотечное офлайн
+          <textarea
+            value={settings.mortgageOfflineText}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOfflineText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Консультация покупка продажа
+          <textarea
+            value={settings.consultationPurchaseSaleText}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, consultationPurchaseSaleText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Ипотечное онлайн (Варшава)
+          <textarea
+            value={settings.mortgageOnlineWarsawText}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOnlineWarsawText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Ипотечное офлайн (Варшава)
+          <textarea
+            value={settings.mortgageOfflineWarsawText}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOfflineWarsawText: e.target.value }))
+            }
+          />
+        </label>
+
+        <button type="submit" disabled={savingSettings}>
+          {savingSettings ? "Сохранение..." : "Сохранить настройки"}
+        </button>
+      </form>
+
       {loading && <p className="hint">Загрузка подключений...</p>}
       {error && <p className="error">{error}</p>}
       {status && <p className="success">{status}</p>}
+      {settingsStatus && <p className="success">{settingsStatus}</p>}
     </main>
   );
 }

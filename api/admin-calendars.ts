@@ -1,9 +1,32 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { z } from "zod";
 import {
   assertAdminPassword,
   getConnectionStatuses,
   getAdminPasswordFromRequestHeaders,
 } from "../lib/google.js";
+import { getAdminSettings, saveAdminSettings } from "../lib/storage.js";
+
+const settingsSchema = z.object({
+  email1: z.string().email().or(z.literal("")),
+  email2: z.string().email().or(z.literal("")),
+  mortgageOnlineText: z.string().max(5000),
+  mortgageOfflineText: z.string().max(5000),
+  consultationPurchaseSaleText: z.string().max(5000),
+  mortgageOnlineWarsawText: z.string().max(5000),
+  mortgageOfflineWarsawText: z.string().max(5000),
+});
+
+function normalizeBody(body: unknown) {
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body) as unknown;
+    } catch {
+      return {};
+    }
+  }
+  return body;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -15,14 +38,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === "GET") {
     try {
-      const connections = await getConnectionStatuses();
+      const [connections, settings] = await Promise.all([
+        getConnectionStatuses(),
+        getAdminSettings(),
+      ]);
 
       return res.status(200).json({
         connections,
+        settings,
       });
     } catch (error) {
       return res.status(500).json({
         message: error instanceof Error ? error.message : "Failed to fetch calendars",
+      });
+    }
+  }
+
+  if (req.method === "POST") {
+    const parsed = settingsSchema.safeParse(normalizeBody(req.body));
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.issues[0]?.message ?? "Invalid input" });
+    }
+
+    try {
+      await saveAdminSettings(parsed.data);
+      return res.status(200).json({ settings: parsed.data });
+    } catch (error) {
+      return res.status(500).json({
+        message: error instanceof Error ? error.message : "Failed to save settings",
       });
     }
   }
