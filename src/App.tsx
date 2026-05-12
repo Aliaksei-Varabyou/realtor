@@ -170,10 +170,10 @@ function BookingPage() {
       <section className="bookingPanel">
         <header className="brandHeader">
           <Link to="/" className="brand">
-            <img className="brandLogo" src="/logo.svg" alt="Независимость Дом" />
+            <img className="brandLogo" src="/logo.png" alt="Независимость Дом" />
           </Link>
           <Link to="/admin" className="textLink menuLink">
-            меню
+            admin
           </Link>
         </header>
 
@@ -184,7 +184,7 @@ function BookingPage() {
 
         <form className="card formGrid bookingForm" onSubmit={submitBooking}>
         <label>
-          ФИО *
+          <span>ФИО <span className="requiredMark">*</span></span>
           <input
             value={form.fullName}
             onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
@@ -194,7 +194,7 @@ function BookingPage() {
         </label>
 
         <label>
-          Телефон *
+          <span>Телефон <span className="requiredMark">*</span></span>
           <input
             value={form.phone}
             onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
@@ -203,16 +203,17 @@ function BookingPage() {
         </label>
 
         <label>
-          Email
+          <span>Email <span className="requiredMark">*</span></span>
           <input
             type="email"
             value={form.email}
             onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+            required
           />
         </label>
 
         <label>
-          Тип услуги *
+          <span>Тип услуги <span className="requiredMark">*</span></span>
           <select
             value={form.meetingType}
             onChange={(e) =>
@@ -230,7 +231,7 @@ function BookingPage() {
         </label>
 
         <label>
-          Город *
+          <span>Город <span className="requiredMark">*</span></span>
           <select
             value={form.city}
             onChange={(e) =>
@@ -246,7 +247,7 @@ function BookingPage() {
         </label>
 
         <label>
-          Дата *
+          <span>Дата <span className="requiredMark">*</span></span>
           <input
             type="date"
             value={form.date}
@@ -257,7 +258,7 @@ function BookingPage() {
         </label>
 
         <fieldset className="slotSection" disabled={!form.meetingType || !form.city}>
-          <legend>Время встречи *</legend>
+          <legend>Время встречи <span className="requiredMark">*</span></legend>
           {loadingSlots && <p className="hint">Загрузка доступных слотов...</p>}
           {!loadingSlots && canLoadSlots && groupedSlots.length === 0 && (
             <p className="hint">На выбранный день нет свободных слотов.</p>
