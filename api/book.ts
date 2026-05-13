@@ -4,7 +4,9 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { isSlotStillAvailable } from "../lib/availability.js";
 import { resolveCalendarSlots } from "../lib/calendarRules.js";
+import { sendBookingEmails } from "../lib/email.js";
 import { getConnectionsByRoles, getOAuthClient, markRoleDisconnected } from "../lib/google.js";
+import { getAdminSettings } from "../lib/storage.js";
 
 const latinNameRegex = /^[A-Za-z\s'-]+$/;
 
@@ -12,7 +14,7 @@ const schema = z
   .object({
     fullName: z.string().min(2).max(120).regex(latinNameRegex, "Name must contain latin characters only"),
     phone: z.string().min(5).max(30),
-    email: z.string().email().optional().or(z.literal("")),
+    email: z.string().email(),
     meetingType: z.enum(["mortgage", "consultation"]),
     city: z.enum(["wroclaw", "warsaw", "other"]),
     meetingFormat: z.enum(["online", "offline"]),
@@ -62,6 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const payload = parsed.data;
+    const adminSettings = await getAdminSettings();
     const roles = resolveCalendarSlots(payload.meetingType, payload.city);
     const connections = await getConnectionsByRoles(roles);
     const clients = connections.map((connection) => ({
@@ -105,7 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       summary: `${payload.meetingType} - ${payload.fullName}`,
       description: [
         `phone: ${payload.phone}`,
-        `email: ${payload.email || "n/a"}`,
+        `email: ${payload.email}`,
         `city: ${payload.city}`,
         `meeting format: ${meetingFormatLabel}`,
         `contact: ${contactLines.join(" | ")}`,
@@ -136,6 +139,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }),
     );
+
+    await sendBookingEmails(adminSettings, {
+      fullName: payload.fullName,
+      clientEmail: payload.email,
+      meetingType: payload.meetingType,
+      city: payload.city,
+      meetingFormat: payload.meetingFormat,
+      datetime: payload.datetime,
+    });
 
     return res.status(200).json({ success: true });
   } catch (error) {

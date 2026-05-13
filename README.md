@@ -31,6 +31,11 @@ Copy `.env.example` to `.env` and fill:
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `MAIL_FROM`
 
 Optional:
 
