@@ -30,20 +30,32 @@ type CalendarConnection = {
 type AdminSettings = {
   email1: string;
   email2: string;
+  email3: string;
+  mortgageOnlineSubject: string;
   mortgageOnlineText: string;
+  mortgageOfflineSubject: string;
   mortgageOfflineText: string;
+  consultationPurchaseSaleSubject: string;
   consultationPurchaseSaleText: string;
+  mortgageOnlineWarsawSubject: string;
   mortgageOnlineWarsawText: string;
+  mortgageOfflineWarsawSubject: string;
   mortgageOfflineWarsawText: string;
 };
 
 const defaultAdminSettings: AdminSettings = {
   email1: "",
   email2: "",
+  email3: "",
+  mortgageOnlineSubject: "",
   mortgageOnlineText: "",
+  mortgageOfflineSubject: "",
   mortgageOfflineText: "",
+  consultationPurchaseSaleSubject: "",
   consultationPurchaseSaleText: "",
+  mortgageOnlineWarsawSubject: "",
   mortgageOnlineWarsawText: "",
+  mortgageOfflineWarsawSubject: "",
   mortgageOfflineWarsawText: "",
 };
 
@@ -493,8 +505,8 @@ function AdminPage() {
     <main className="page adminPage">
       <header className="header">
         <h1>Admin Panel</h1>
-        <div className="row">
-          <Link to="/" className="textLink">
+        <div className="adminHeaderActions">
+          <Link to="/" className="buttonLink">
             Назад к форме бронирования
           </Link>
           <button
@@ -549,11 +561,31 @@ function AdminPage() {
         </label>
 
         <label>
+          Тема: Ипотечное онлайн
+          <input
+            value={settings.mortgageOnlineSubject}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOnlineSubject: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
           Ипотечное онлайн
           <textarea
             value={settings.mortgageOnlineText}
             onChange={(e) =>
               setSettings((prev) => ({ ...prev, mortgageOnlineText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Тема: Ипотечное офлайн
+          <input
+            value={settings.mortgageOfflineSubject}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOfflineSubject: e.target.value }))
             }
           />
         </label>
@@ -569,6 +601,16 @@ function AdminPage() {
         </label>
 
         <label>
+          Тема: Консультация покупка продажа
+          <input
+            value={settings.consultationPurchaseSaleSubject}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, consultationPurchaseSaleSubject: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
           Консультация покупка продажа
           <textarea
             value={settings.consultationPurchaseSaleText}
@@ -579,11 +621,40 @@ function AdminPage() {
         </label>
 
         <label>
+          Емейл3
+          <input
+            type="email"
+            value={settings.email3}
+            onChange={(e) => setSettings((prev) => ({ ...prev, email3: e.target.value }))}
+          />
+        </label>
+
+        <label>
+          Тема: Ипотечное онлайн (Варшава)
+          <input
+            value={settings.mortgageOnlineWarsawSubject}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOnlineWarsawSubject: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
           Ипотечное онлайн (Варшава)
           <textarea
             value={settings.mortgageOnlineWarsawText}
             onChange={(e) =>
               setSettings((prev) => ({ ...prev, mortgageOnlineWarsawText: e.target.value }))
+            }
+          />
+        </label>
+
+        <label>
+          Тема: Ипотечное офлайн (Варшава)
+          <input
+            value={settings.mortgageOfflineWarsawSubject}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, mortgageOfflineWarsawSubject: e.target.value }))
             }
           />
         </label>

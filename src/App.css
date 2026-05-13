@@ -292,6 +292,44 @@ button:disabled {
   flex-wrap: wrap;
 }
 
+.adminHeaderActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.adminHeaderActions button,
+.buttonLink {
+  width: auto;
+}
+
+.buttonLink {
+  min-height: 42px;
+  padding: 10px 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: #829274;
+  color: #fffaf1;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.buttonLink:hover {
+  background: #E9E3D6;
+  box-shadow: 0 10px 22px rgba(115, 132, 103, 0.18);
+  color: #7c5948;
+  transform: translateY(-1px);
+}
+
 .tableWrap {
   overflow-x: auto;
 }

@@ -11,20 +11,32 @@ export type CalendarConnection = {
 export type AdminSettings = {
   email1: string;
   email2: string;
+  email3: string;
+  mortgageOnlineSubject: string;
   mortgageOnlineText: string;
+  mortgageOfflineSubject: string;
   mortgageOfflineText: string;
+  consultationPurchaseSaleSubject: string;
   consultationPurchaseSaleText: string;
+  mortgageOnlineWarsawSubject: string;
   mortgageOnlineWarsawText: string;
+  mortgageOfflineWarsawSubject: string;
   mortgageOfflineWarsawText: string;
 };
 
 export const defaultAdminSettings: AdminSettings = {
   email1: "",
   email2: "",
+  email3: "",
+  mortgageOnlineSubject: "",
   mortgageOnlineText: "",
+  mortgageOfflineSubject: "",
   mortgageOfflineText: "",
+  consultationPurchaseSaleSubject: "",
   consultationPurchaseSaleText: "",
+  mortgageOnlineWarsawSubject: "",
   mortgageOnlineWarsawText: "",
+  mortgageOfflineWarsawSubject: "",
   mortgageOfflineWarsawText: "",
 };
 

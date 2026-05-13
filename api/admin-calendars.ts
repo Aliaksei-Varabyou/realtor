@@ -10,10 +10,16 @@ import { getAdminSettings, saveAdminSettings } from "../lib/storage.js";
 const settingsSchema = z.object({
   email1: z.string().email().or(z.literal("")),
   email2: z.string().email().or(z.literal("")),
+  email3: z.string().email().or(z.literal("")),
+  mortgageOnlineSubject: z.string().max(500),
   mortgageOnlineText: z.string().max(5000),
+  mortgageOfflineSubject: z.string().max(500),
   mortgageOfflineText: z.string().max(5000),
+  consultationPurchaseSaleSubject: z.string().max(500),
   consultationPurchaseSaleText: z.string().max(5000),
+  mortgageOnlineWarsawSubject: z.string().max(500),
   mortgageOnlineWarsawText: z.string().max(5000),
+  mortgageOfflineWarsawSubject: z.string().max(500),
   mortgageOfflineWarsawText: z.string().max(5000),
 });
 
